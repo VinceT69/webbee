@@ -2,13 +2,11 @@ import { Controller, Get } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
-import { Workshop } from './entities/workshop.entity';
 
 @Controller()
 export class EventController {
   constructor(
     @InjectRepository(Event) private eventRepository: Repository<Event>,
-    @InjectRepository(Workshop) private workshopRepository: Repository<Workshop>,
   ) {}
 
   @Get('warmupevents')
@@ -103,18 +101,15 @@ export class EventController {
   @Get('events')
   async getEventsWithWorkshops() {
     //Implement in coding task 1
-    const events = await this.eventRepository.find();
-    const workshops = await this.workshopRepository.find();
-    for (let event of events) {
-      event["workshop"] = [];
-      workshops.map(workshop => {
-        if (event.id === workshop.event_id) {
-          event["workshop"].push({
-            ...workshop
-          })
-        }
+    const events = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.workshops', 'workshop')
+      .orderBy({
+        'event.id': 'ASC',
+        'workshop.id': 'ASC',
       })
-    }
+      .getMany();
+
     return events;
   }
 
@@ -193,10 +188,19 @@ export class EventController {
   @Get('futureevents')
   async getFutureEventWithWorkshops() {
     //implement in coding task2
-    const date = new Date();
-    const response = await this.eventRepository.query(
-      `Select * from events as ev INNER JOIN workshops on workshops.event_id = ev.id where ev.created_at < "${date.toISOString()}" `
-    );
-    return response;
+    const events = await this.eventRepository
+      .createQueryBuilder('event')
+      .innerJoinAndSelect(
+        'event.workshops',
+        'workshop',
+        `workshop.start > :today`,
+        { today: new Date() },
+      )
+      .orderBy({
+        'event.id': 'ASC',
+        'workshop.id': 'ASC',
+      })
+      .getMany();
+    return events;
   }
 }

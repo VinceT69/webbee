@@ -1,13 +1,18 @@
 import { Controller, Get } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  InjectDataSource,
+  InjectEntityManager,
+  InjectRepository,
+} from '@nestjs/typeorm';
+import { Repository, TreeRepository, DataSource } from 'typeorm';
 import { MenuItem } from './entities/menu.entity';
 
 @Controller()
 export class MenuController {
-    constructor(
-        @InjectRepository(MenuItem) private menuRepository: Repository<MenuItem>,
-      ) {}
+  constructor(
+    @InjectRepository(MenuItem)
+    private menuItemRepository: TreeRepository<MenuItem>,
+  ) {}
   /*
     Requirements:
     - the eloquent expressions should result in EXACTLY one SQL query no matter the nesting level or the amount of menu items.
@@ -93,12 +98,8 @@ export class MenuController {
   @Get('menu')
   async getMenuItems() {
     //implement in coding task3
-    const menus = await this.menuRepository.query(
-        `WITH mi
-            AS (SELECT id, parent_id FROM menu_items)
-            SELECT mi.id, mi.parent_id, mi2.parent_id FROM menu_items AS gd
-                LEFT JOIN menu_items AS mi2 ON mi2.id = mi.parent_id`
-    )
-    return menus;
+    const menuItems = await this.menuItemRepository.findTrees();
+
+    return menuItems;
   }
 }

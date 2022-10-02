@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Event } from './event.entity';
 
 @Entity('workshops')
@@ -23,4 +29,8 @@ export class Workshop {
 
   @Column({ type: 'datetime' })
   updated_at: string;
+
+  @ManyToOne(() => Event, (event) => event.workshops)
+  @JoinColumn({ name: 'event_id' })
+  event: Event;
 }
