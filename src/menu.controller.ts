@@ -98,7 +98,7 @@ export class MenuController {
   @Get('menu')
   async getMenuItems() {
     //implement in coding task3
-    const menuItems = await this.menuItemRepository.findTrees;
+    const menuItems = await this.menuItemRepository.findTrees();
 
     return menuItems;
   }
